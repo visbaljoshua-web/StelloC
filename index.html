@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parcel C — Success Deserves a View</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            plum:    { DEFAULT: '#4A4458', light: '#6750A4', muted: '#7C6F8E', pale: '#EDE9F4' },
+            stone:   { warm: '#F5F2EE', mid: '#D6D0C8' },
+            ink:     '#1C1B1F',
+          },
+          fontFamily: {
+            display: ['"Cormorant Garamond"', 'serif'],
+            body:    ['"DM Sans"', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: #F5F2EE; color: #1C1B1F; overflow-x: hidden; }
+
+    /* ── Nav ── */
+    #navbar { transition: background 0.4s, box-shadow 0.4s; }
+    #navbar.scrolled { background: rgba(74,68,88,0.97) !important; box-shadow: 0 2px 24px rgba(0,0,0,0.18); }
+
+    /* ── Hero ── */
+    .hero-bg {
+      background-image: linear-gradient(to bottom, rgba(28,27,31,0.52) 0%, rgba(74,68,88,0.38) 60%, rgba(28,27,31,0.72) 100%),
+        url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1800&auto=format&fit=crop&q=85');
+      background-size: cover;
+      background-position: center 30%;
+    }
+
+    /* ── Parallax shimmer band ── */
+    .shimmer-band {
+      background: linear-gradient(135deg, #4A4458 0%, #6750A4 40%, #7C6F8E 70%, #4A4458 100%);
+      background-size: 200% 200%;
+      animation: shimmer 8s ease infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 0% 50%;   }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%;   }
+    }
+
+    /* ── Section reveal ── */
+    .reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.8s cubic-bezier(.22,1,.36,1), transform 0.8s cubic-bezier(.22,1,.36,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: 0.12s; }
+    .reveal-delay-2 { transition-delay: 0.24s; }
+    .reveal-delay-3 { transition-delay: 0.36s; }
+    .reveal-delay-4 { transition-delay: 0.48s; }
+
+    /* ── Feature cards ── */
+    .feature-card { position: relative; overflow: hidden; border: 1px solid #D6D0C8; background: #fff; transition: transform 0.35s cubic-bezier(.22,1,.36,1), box-shadow 0.35s; }
+    .feature-card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, #6750A4 0%, #4A4458 100%); opacity: 0; transition: opacity 0.35s; pointer-events: none; }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: 0 24px 56px rgba(74,68,88,0.16); }
+    .feature-card:hover::after { opacity: 0.06; }
+
+    /* ── Showcase grid ── */
+    .showcase-img { object-fit: cover; width: 100%; height: 100%; display: block; transition: transform 0.6s cubic-bezier(.22,1,.36,1); }
+    .showcase-wrap { overflow: hidden; }
+    .showcase-wrap:hover .showcase-img { transform: scale(1.05); }
+
+    /* ── CTA Button ── */
+    .btn-primary { background: linear-gradient(135deg, #6750A4, #4A4458); color: #fff; letter-spacing: 0.08em; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(103,80,164,0.38); opacity: 0.92; }
+    .btn-outline { border: 1.5px solid #fff; color: #fff; letter-spacing: 0.08em; text-transform: uppercase; transition: background 0.2s, color 0.2s; }
+    .btn-outline:hover { background: #fff; color: #4A4458; }
+
+    /* ── Stat counter ── */
+    .stat-val { font-family: 'Cormorant Garamond', serif; font-weight: 300; line-height: 1; }
+
+    /* ── Divider ornament ── */
+    .ornament { display: flex; align-items: center; gap: 1rem; }
+    .ornament::before, .ornament::after { content: ''; flex: 1; height: 1px; background: #D6D0C8; }
+
+    /* ── Scroll indicator ── */
+    @keyframes bounce-y { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+    .scroll-arrow { animation: bounce-y 2s ease-in-out infinite; }
+
+    /* ── Footer link hover ── */
+    .footer-link { position: relative; }
+    .footer-link::after { content: ''; position: absolute; left: 0; bottom: -2px; width: 0; height: 1px; background: #EDE9F4; transition: width 0.3s; }
+    .footer-link:hover::after { width: 100%; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 py-5 px-6 md:px-12 flex items-center justify-between">
+  <a href="#" class="flex items-center gap-3">
+    <!-- Logo mark -->
+    <div class="w-9 h-9 rounded-sm shimmer-band flex items-center justify-center">
+      <span class="text-white font-display font-semibold text-lg leading-none">C</span>
+    </div>
+    <span class="font-display text-white text-xl tracking-widest font-light">PARCEL <span class="font-semibold">C</span></span>
+  </a>
+
+  <!-- Desktop nav -->
+  <ul class="hidden md:flex items-center gap-8 text-white/80 text-sm font-body font-light tracking-wider">
+    <li><a href="#about"    class="hover:text-white transition-colors">About</a></li>
+    <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+    <li><a href="#showcase" class="hover:text-white transition-colors">Gallery</a></li>
+    <li><a href="#contact"  class="hover:text-white transition-colors">Contact</a></li>
+  </ul>
+
+  <a href="#contact" class="hidden md:inline-flex btn-primary text-xs font-body font-medium px-6 py-3 rounded-sm">
+    Inquire Now
+  </a>
+
+  <!-- Mobile hamburger -->
+  <button id="menu-btn" class="md:hidden text-white p-2" aria-label="Toggle menu">
+    <svg width="22" height="16" viewBox="0 0 22 16" fill="none"><rect width="22" height="2" fill="currentColor"/><rect y="7" width="16" height="2" fill="currentColor"/><rect y="14" width="22" height="2" fill="currentColor"/></svg>
+  </button>
+</nav>
+
+<!-- Mobile menu -->
+<div id="mobile-menu" class="hidden fixed inset-0 z-40 bg-plum/95 flex flex-col items-center justify-center gap-10">
+  <button id="menu-close" class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl">✕</button>
+  <ul class="flex flex-col items-center gap-8 text-white font-display text-3xl font-light">
+    <li><a href="#about"    class="mobile-link hover:text-plum-pale transition-colors">About</a></li>
+    <li><a href="#features" class="mobile-link hover:text-plum-pale transition-colors">Features</a></li>
+    <li><a href="#showcase" class="mobile-link hover:text-plum-pale transition-colors">Gallery</a></li>
+    <li><a href="#contact"  class="mobile-link hover:text-plum-pale transition-colors">Contact</a></li>
+  </ul>
+  <a href="#contact" class="mobile-link btn-primary text-sm font-body px-8 py-4 rounded-sm mt-4">Inquire Now</a>
+</div>
+
+
+<!-- ════════════════════════════════════
+     HERO
+════════════════════════════════════ -->
+<section class="hero-bg min-h-screen flex flex-col justify-end pb-20 md:pb-28 px-6 md:px-16 lg:px-24 relative">
+
+  <!-- Top banner bar (mirrors the reference image) -->
+  <div class="absolute top-0 left-0 right-0 h-1 shimmer-band"></div>
+
+  <div class="max-w-4xl">
+    <p class="text-plum-pale/80 font-body text-xs tracking-[0.25em] uppercase mb-5 reveal">
+      Waterfront Mixed-Use Development
+    </p>
+
+    <h1 class="font-display text-white leading-[0.92] mb-6 reveal reveal-delay-1"
+        style="font-size: clamp(3.2rem, 8vw, 7rem); font-weight: 300;">
+      Success<br/>
+      <em style="font-style: italic; font-weight: 300;">Deserves</em><br/>
+      <span class="font-semibold">a View.</span>
+    </h1>
+
+    <p class="text-white/70 font-body font-light text-base md:text-lg max-w-xl leading-relaxed mb-10 reveal reveal-delay-2">
+      Parcel C redefines waterfront living — where curated retail, world-class residences, and breathtaking horizons converge into one iconic address.
+    </p>
+
+    <div class="flex flex-wrap gap-4 reveal reveal-delay-3">
+      <a href="#contact" class="btn-primary font-body text-xs px-8 py-4 rounded-sm">
+        Register Your Interest
+      </a>
+      <a href="#about" class="btn-outline font-body text-xs px-8 py-4 rounded-sm">
+        Explore the Vision
+      </a>
+    </div>
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+    <span class="text-white/40 text-xs font-body tracking-widest">SCROLL</span>
+    <div class="scroll-arrow text-white/40">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M3 9l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     STATS BAR
+════════════════════════════════════ -->
+<div class="shimmer-band py-10 px-6">
+  <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+    <div class="reveal">
+      <div class="stat-val text-white text-5xl md:text-6xl">48</div>
+      <div class="text-white/60 font-body text-xs tracking-widest mt-2 uppercase">Floors</div>
+    </div>
+    <div class="reveal reveal-delay-1">
+      <div class="stat-val text-white text-5xl md:text-6xl">320+</div>
+      <div class="text-white/60 font-body text-xs tracking-widest mt-2 uppercase">Units</div>
+    </div>
+    <div class="reveal reveal-delay-2">
+      <div class="stat-val text-white text-5xl md:text-6xl">12</div>
+      <div class="text-white/60 font-body text-xs tracking-widest mt-2 uppercase">Retail Outlets</div>
+    </div>
+    <div class="reveal reveal-delay-3">
+      <div class="stat-val text-white text-5xl md:text-6xl">∞</div>
+      <div class="text-white/60 font-body text-xs tracking-widest mt-2 uppercase">Horizon</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     ABOUT
+════════════════════════════════════ -->
+<section id="about" class="py-28 px-6 md:px-16 lg:px-24">
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+
+    <!-- Text -->
+    <div>
+      <div class="ornament mb-8 reveal">
+        <span class="text-plum font-body text-xs tracking-[0.22em] uppercase text-plum-muted">About Parcel C</span>
+      </div>
+      <h2 class="font-display text-ink text-4xl md:text-5xl leading-tight font-light mb-6 reveal reveal-delay-1">
+        An Address That<br/><em>Speaks Before You Do</em>
+      </h2>
+      <p class="font-body text-ink/60 leading-relaxed mb-5 reveal reveal-delay-2">
+        Parcel C is the crown jewel of a master-planned waterfront district — a soaring mixed-use tower where premium residences sit above a vibrant promenade of curated dining, retail, and lifestyle destinations.
+      </p>
+      <p class="font-body text-ink/60 leading-relaxed mb-8 reveal reveal-delay-3">
+        Each detail has been thoughtfully crafted to honor the connection between land and water, between ambition and arrival. This is more than a property — it is a statement.
+      </p>
+      <a href="#features" class="btn-primary inline-flex font-body text-xs px-7 py-3.5 rounded-sm reveal reveal-delay-4">
+        Discover the Features
+      </a>
+    </div>
+
+    <!-- Image -->
+    <div class="relative reveal reveal-delay-2">
+      <div class="showcase-wrap rounded-sm aspect-[4/5] shadow-2xl">
+        <img
+          src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=900&auto=format&fit=crop&q=85"
+          alt="Parcel C waterfront tower"
+          class="showcase-img"
+          loading="lazy"
+        />
+      </div>
+      <!-- Floating accent card -->
+      <div class="absolute -bottom-8 -left-8 bg-white border border-stone-mid p-6 shadow-xl rounded-sm max-w-[200px]">
+        <div class="font-display text-plum text-3xl font-semibold">2026</div>
+        <div class="font-body text-ink/50 text-xs tracking-wider mt-1 uppercase">Est. Completion</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     FEATURES
+════════════════════════════════════ -->
+<section id="features" class="py-24 px-6 md:px-16 lg:px-24 bg-white">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center mb-16">
+      <div class="ornament mb-6 reveal">
+        <span class="text-plum-muted font-body text-xs tracking-[0.22em] uppercase">What Sets Us Apart</span>
+      </div>
+      <h2 class="font-display text-ink text-4xl md:text-5xl font-light leading-tight reveal reveal-delay-1">
+        Crafted for the <em>Discerning Few</em>
+      </h2>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Card 1 -->
+      <div class="feature-card rounded-sm p-8 reveal">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Premium Residences</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">Generously proportioned units with floor-to-ceiling glass, high-spec finishes, and panoramic bay views from every level.</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="feature-card rounded-sm p-8 reveal reveal-delay-1">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Waterfront Promenade</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">A curated ground-level retail and dining strip facing the water — designed for slow mornings, long evenings, and everything in between.</p>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="feature-card rounded-sm p-8 reveal reveal-delay-2">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Smart Living</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">Fully integrated home automation, fibre connectivity, and concierge services — so your home adapts to your life, not the other way around.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="feature-card rounded-sm p-8 reveal reveal-delay-1">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Wellness Amenities</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">An infinity-edge pool, sky lounge, fully equipped gym, and spa facilities — your personal retreat above the cityline.</p>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="feature-card rounded-sm p-8 reveal reveal-delay-2">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Sky Offices</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">Dedicated co-working floors with private meeting pods, enterprise Wi-Fi, and views that make every call a power move.</p>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="feature-card rounded-sm p-8 reveal reveal-delay-3">
+        <div class="w-12 h-12 rounded-sm bg-plum-pale flex items-center justify-center mb-6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3 class="font-display text-ink text-2xl font-semibold mb-3">Prime Connectivity</h3>
+        <p class="font-body text-ink/55 text-sm leading-relaxed">Minutes from the CBD, international airport, and key commercial districts — position yourself at the intersection of everything.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     IMAGE SHOWCASE
+════════════════════════════════════ -->
+<section id="showcase" class="py-24 px-6 md:px-16 lg:px-24">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="text-center mb-14">
+      <div class="ornament mb-6 reveal">
+        <span class="text-plum-muted font-body text-xs tracking-[0.22em] uppercase">Gallery</span>
+      </div>
+      <h2 class="font-display text-ink text-4xl md:text-5xl font-light reveal reveal-delay-1">
+        See the <em>Vision</em>
+      </h2>
+    </div>
+
+    <!-- Asymmetric showcase grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+
+      <!-- Large left image -->
+      <div class="col-span-2 md:col-span-2 row-span-2 showcase-wrap rounded-sm aspect-[16/10] md:aspect-auto reveal">
+        <img
+          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&auto=format&fit=crop&q=80"
+          alt="Parcel C exterior"
+          class="showcase-img"
+          style="height: 100%; min-height: 320px;"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Small top-right -->
+      <div class="showcase-wrap rounded-sm aspect-square reveal reveal-delay-1">
+        <img
+          src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&auto=format&fit=crop&q=80"
+          alt="Modern interior"
+          class="showcase-img"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Small bottom-right -->
+      <div class="showcase-wrap rounded-sm aspect-square reveal reveal-delay-2">
+        <img
+          src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=600&auto=format&fit=crop&q=80"
+          alt="Luxury amenities"
+          class="showcase-img"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Wide bottom -->
+      <div class="col-span-2 md:col-span-1 showcase-wrap rounded-sm aspect-video md:aspect-square reveal reveal-delay-1">
+        <img
+          src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&auto=format&fit=crop&q=80"
+          alt="Penthouse view"
+          class="showcase-img"
+          loading="lazy"
+        />
+      </div>
+
+      <!-- Last slot -->
+      <div class="col-span-2 showcase-wrap rounded-sm aspect-[16/7] reveal reveal-delay-2">
+        <img
+          src="https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=1200&auto=format&fit=crop&q=80"
+          alt="Waterfront promenade"
+          class="showcase-img"
+          loading="lazy"
+        />
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     QUOTE / PULL SECTION
+════════════════════════════════════ -->
+<div class="shimmer-band py-20 px-6 text-center">
+  <div class="max-w-3xl mx-auto">
+    <p class="font-display text-white text-3xl md:text-5xl font-light italic leading-snug reveal">
+      "Where every sunrise belongs to you."
+    </p>
+    <div class="w-12 h-0.5 bg-white/30 mx-auto mt-8 reveal reveal-delay-1"></div>
+    <p class="text-white/50 font-body text-xs tracking-widest mt-4 uppercase reveal reveal-delay-2">Parcel C — Waterfront Residences</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     CONTACT / CTA
+════════════════════════════════════ -->
+<section id="contact" class="py-28 px-6 md:px-16 lg:px-24 bg-stone-warm">
+  <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 items-start">
+
+    <!-- Left -->
+    <div>
+      <div class="ornament mb-6 reveal">
+        <span class="text-plum-muted font-body text-xs tracking-[0.22em] uppercase">Get in Touch</span>
+      </div>
+      <h2 class="font-display text-ink text-4xl md:text-5xl font-light leading-tight mb-6 reveal reveal-delay-1">
+        Your View<br/><em>Awaits You</em>
+      </h2>
+      <p class="font-body text-ink/55 leading-relaxed mb-8 reveal reveal-delay-2">
+        Register your interest today and be among the first to receive exclusive floor plans, pricing, and launch-day privileges for Parcel C.
+      </p>
+      <div class="space-y-4 font-body text-sm text-ink/60 reveal reveal-delay-3">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-plum-pale flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span>Waterfront District, Bay City — Metro Manila</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-plum-pale flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <span>+63 2 8888 0000</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-plum-pale flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6750A4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <span>hello@parcelc.com</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — Form -->
+    <div class="bg-white border border-stone-mid p-8 md:p-10 rounded-sm shadow-sm reveal reveal-delay-2">
+      <h3 class="font-display text-ink text-2xl font-semibold mb-7">Register Interest</h3>
+
+      <div class="space-y-5">
+        <div>
+          <label class="block font-body text-xs text-ink/50 tracking-widest uppercase mb-2">Full Name</label>
+          <input type="text" placeholder="Juan dela Cruz"
+            class="w-full border border-stone-mid rounded-sm px-4 py-3 font-body text-sm text-ink outline-none focus:border-plum transition-colors bg-stone-warm/40"
+          />
+        </div>
+        <div>
+          <label class="block font-body text-xs text-ink/50 tracking-widest uppercase mb-2">Email Address</label>
+          <input type="email" placeholder="juan@example.com"
+            class="w-full border border-stone-mid rounded-sm px-4 py-3 font-body text-sm text-ink outline-none focus:border-plum transition-colors bg-stone-warm/40"
+          />
+        </div>
+        <div>
+          <label class="block font-body text-xs text-ink/50 tracking-widest uppercase mb-2">Phone Number</label>
+          <input type="tel" placeholder="+63 9XX XXX XXXX"
+            class="w-full border border-stone-mid rounded-sm px-4 py-3 font-body text-sm text-ink outline-none focus:border-plum transition-colors bg-stone-warm/40"
+          />
+        </div>
+        <div>
+          <label class="block font-body text-xs text-ink/50 tracking-widest uppercase mb-2">Unit Type of Interest</label>
+          <select class="w-full border border-stone-mid rounded-sm px-4 py-3 font-body text-sm text-ink outline-none focus:border-plum transition-colors bg-stone-warm/40 appearance-none">
+            <option value="">Select a unit type</option>
+            <option>Studio (32–38 sqm)</option>
+            <option>1-Bedroom (48–60 sqm)</option>
+            <option>2-Bedroom (72–90 sqm)</option>
+            <option>3-Bedroom (105–130 sqm)</option>
+            <option>Penthouse (200+ sqm)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-body text-xs text-ink/50 tracking-widest uppercase mb-2">Message (optional)</label>
+          <textarea rows="3" placeholder="Tell us about your requirements..."
+            class="w-full border border-stone-mid rounded-sm px-4 py-3 font-body text-sm text-ink outline-none focus:border-plum transition-colors bg-stone-warm/40 resize-none"
+          ></textarea>
+        </div>
+
+        <button onclick="handleSubmit(this)"
+          class="btn-primary w-full font-body text-xs font-medium py-4 rounded-sm mt-2">
+          Submit Inquiry
+        </button>
+
+        <p class="font-body text-xs text-ink/35 text-center">Your privacy is respected. No spam, ever.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════
+     FOOTER
+════════════════════════════════════ -->
+<footer class="bg-ink text-white/60 py-16 px-6 md:px-16 lg:px-24">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="grid md:grid-cols-4 gap-12 mb-12">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-9 h-9 rounded-sm shimmer-band flex items-center justify-center">
+            <span class="text-white font-display font-semibold text-lg leading-none">C</span>
+          </div>
+          <span class="font-display text-white text-xl tracking-widest font-light">PARCEL <span class="font-semibold">C</span></span>
+        </div>
+        <p class="font-body text-sm leading-relaxed text-white/45 max-w-xs">
+          A landmark waterfront address in Metro Manila's most coveted development corridor.
+        </p>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <h4 class="font-body text-xs text-white/30 tracking-widest uppercase mb-5">Explore</h4>
+        <ul class="space-y-3 text-sm font-body">
+          <li><a href="#about"    class="footer-link hover:text-white transition-colors">About Parcel C</a></li>
+          <li><a href="#features" class="footer-link hover:text-white transition-colors">Features</a></li>
+          <li><a href="#showcase" class="footer-link hover:text-white transition-colors">Gallery</a></li>
+          <li><a href="#contact"  class="footer-link hover:text-white transition-colors">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <!-- Legal -->
+      <div>
+        <h4 class="font-body text-xs text-white/30 tracking-widest uppercase mb-5">Legal</h4>
+        <ul class="space-y-3 text-sm font-body">
+          <li><a href="#" class="footer-link hover:text-white transition-colors">Privacy Policy</a></li>
+          <li><a href="#" class="footer-link hover:text-white transition-colors">Terms of Use</a></li>
+          <li><a href="#" class="footer-link hover:text-white transition-colors">Cookie Policy</a></li>
+          <li><a href="#" class="footer-link hover:text-white transition-colors">Disclaimer</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+      <p class="font-body text-xs text-white/25">
+        © 2026 Parcel C Development. All rights reserved.
+      </p>
+      <p class="font-body text-xs text-white/25">
+        Renders are artist's impressions only. Subject to change without notice.
+      </p>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════ -->
+<script>
+  /* ── Scroll-based reveal ── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => observer.observe(el));
+
+  /* ── Navbar scroll style ── */
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  /* ── Mobile menu ── */
+  const menuBtn   = document.getElementById('menu-btn');
+  const menuClose = document.getElementById('menu-close');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileLinks = document.querySelectorAll('.mobile-link');
+
+  function openMenu()  { mobileMenu.classList.remove('hidden'); mobileMenu.classList.add('flex'); document.body.style.overflow = 'hidden'; }
+  function closeMenu() { mobileMenu.classList.add('hidden');    mobileMenu.classList.remove('flex'); document.body.style.overflow = ''; }
+
+  menuBtn.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  mobileLinks.forEach(l => l.addEventListener('click', closeMenu));
+
+  /* ── Form submit handler ── */
+  function handleSubmit(btn) {
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = '✓ Inquiry Received — We\'ll be in touch!';
+      btn.style.background = 'linear-gradient(135deg,#2d8c5c,#1e6b45)';
+    }, 1200);
+  }
+</script>
+
+</body>
+</html>
